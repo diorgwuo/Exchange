@@ -8,21 +8,23 @@ import com.yuldashov.spring.model.Currency;
 import com.yuldashov.spring.repository.CurrencyDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class CurrencyService {
-    private CurrencyDAO currencyDAO;
+    private final CurrencyDAO currencyDAO;
 
     @Autowired
     public CurrencyService(CurrencyDAO currencyDAO) {
         this.currencyDAO = currencyDAO;
     }
 
+    @Transactional
     public CurrencyResponse create(CurrencyRequest request) {
         if (currencyDAO.existByCode(request.getCode())) {
-            throw new DublicateException ("Валюта с кодом " + request.getCode() + " уже существует");
+            throw new DublicateException("Валюта с кодом " + request.getCode() + " уже существует");
         }
 
         Currency currency = new Currency();
@@ -30,34 +32,29 @@ public class CurrencyService {
         currency.setCode(request.getCode());
         currency.setSign(request.getSign());
 
-        currencyDAO.create(currency);
+        int id = currencyDAO.create(currency);
 
-        Currency saved = currencyDAO.lastCreate();
-        CurrencyResponse response = new CurrencyResponse();
-        response.setId(saved.getId());
-        response.setName(saved.getFullName());
-        response.setCode(saved.getCode());
-        response.setSign(saved.getSign());
-        return response;
+        return new CurrencyResponse(id,
+                currency.getFullName(),
+                currency.getCode(),
+                currency.getSign()
+        );
     }
 
     public List<Currency> index() {
-        List<Currency> allCurrency = currencyDAO.index();
-        return allCurrency;
+        return currencyDAO.index();
     }
 
     public CurrencyResponse getByCode(String code) {
         if (currencyDAO.existByCode(code)) {
             Currency currency = currencyDAO.getByCode(code);
-            CurrencyResponse response = new CurrencyResponse();
-            response.setId(currency.getId());
-            response.setName(currency.getFullName());
-            response.setCode(currency.getCode());
-            response.setSign(currency.getSign());
-            return response;
-        }
-        else {
-            throw new NotFoundException("Не найдено такой валюты");
+            return new CurrencyResponse(currency.getId(),
+                    currency.getFullName(),
+                    currency.getCode(),
+                    currency.getSign()
+            );
+        } else {
+            throw new NotFoundException("Не найдено валюта" + code);
         }
     }
 }

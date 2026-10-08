@@ -6,9 +6,13 @@ import com.yuldashov.spring.model.Currency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 
 @Repository
@@ -21,37 +25,42 @@ public class CurrencyDAO {
     }
 
     public List<Currency> index() {
-        return jdbcTemplate.query("SELECT * FROM Currencies", new BeanPropertyRowMapper<>(Currency.class));
+        return jdbcTemplate.query("SELECT * FROM currencies", new BeanPropertyRowMapper<>(Currency.class));
     }
 
-    public void create(Currency currency) {
-        jdbcTemplate.update("INSERT INTO Currencies (FullName,Code,Sign) VALUES (?,?,?)",
-                 currency.getFullName(), currency.getCode(), currency.getSign());
+    public int create(Currency currency) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(con -> {
+                    PreparedStatement ps = con.prepareStatement(
+                            "INSERT INTO currencies (FullName,Code,Sign) VALUES (?,?,?)",
+                            Statement.RETURN_GENERATED_KEYS);
+                    ps.setString(1, currency.getFullName());
+                    ps.setString(2, currency.getCode());
+                    ps.setString(3, currency.getSign());
+                    return ps;
+                },
+                keyHolder);
+        return keyHolder.getKey().intValue();
     }
 
-    public Currency lastCreate () {
-        return jdbcTemplate.queryForObject("SELECT * FROM Currencies ORDER BY id DESC LIMIT 1",
-                new BeanPropertyRowMapper<>(Currency.class));
-    }
-
-    public boolean existByCode (String code) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM Currencies WHERE code = ?", Integer.class, code);
-        return count!=null && count>0;
+    public boolean existByCode(String code) {
+        return jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM currencies WHERE code = ?)", Boolean.class, code);
     }
 
     public Currency getByCode(String code) {
-        return jdbcTemplate.queryForObject("SELECT * FROM Currencies WHERE code = ?",new BeanPropertyRowMapper<>(Currency.class), code);
+        return jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE code = ?", new BeanPropertyRowMapper<>(Currency.class), code);
     }
 
     public Currency getById(int id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM Currencies WHERE id = ?"
-        ,new BeanPropertyRowMapper<>(Currency.class), id);
+        return jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE id = ?"
+                , new BeanPropertyRowMapper<>(Currency.class), id);
     }
 
-    public int getCodeById(String Code) {
-        Currency currency = jdbcTemplate.queryForObject("SELECT * FROM Currencies WHERE code = ?"
-                ,new BeanPropertyRowMapper<>(Currency.class), Code);
+    public int getCodeById(String сode) {
+        Currency currency = jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE code = ?"
+                , new BeanPropertyRowMapper<>(Currency.class), сode);
         return currency.getId();
     }
 }

@@ -29,8 +29,9 @@ public class ExchangeController {
     }
 
     @PostMapping("/exchangeRates")
-    public ResponseEntity<ExchangeResponse> create(ExchangeRequest request) {
-        return new ResponseEntity<>(exchangeService.create(request), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ExchangeResponse create(ExchangeRequest request) {
+        return exchangeService.create(request);
     }
 
     @GetMapping("/exchangeRates")
@@ -41,29 +42,20 @@ public class ExchangeController {
     @GetMapping("/exchangeRate/{code}")
     public ExchangeResponse getByCode(
             @PathVariable("code") String code) {
-        String baseCode = code.substring(0, 3);
-        String targetCode = code.substring(3, 6);
-        return exchangeService.getCoupleCurrency(baseCode, targetCode);
+        return exchangeService.getCoupleCurrency(code);
     }
 
-    @GetMapping("/exchangeRate/")
-    public ResponseEntity<ErrorResponse> getWithoutId() {
-        ErrorResponse errorResponse = new ErrorResponse(400, "Bad request", "Не введен Code в URL");
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @PatchMapping(value = "/exchangeRate/{code}",
-    consumes = MediaType.APPLICATION_JSON_VALUE,
-    produces = MediaType.APPLICATION_JSON_VALUE)
-    public ExchangeResponse update(@PathVariable("code") String code, @RequestBody Map<String, String> params) {
-        return exchangeService.update(code,params);
+    @PatchMapping(value = "/exchangeRate/{code}")
+    public ExchangeResponse update(@PathVariable("code") String code, @RequestBody ExchangeRateDTO rateDto) {
+        BigDecimal rate = rateDto.rate();
+        return exchangeService.update(code, rate);
     }
 
     @GetMapping(value = "/exchange")
     public ExchangeDTOResponse Exchange(@RequestParam("from") String baseCurrency,
                                         @RequestParam("to") String targetCurrency,
                                         @RequestParam("amount") BigDecimal amount) {
-        return exchangeService.calculateExchange(baseCurrency,targetCurrency,amount);
+        return exchangeService.calculateExchange(baseCurrency, targetCurrency, amount);
     }
 
 }

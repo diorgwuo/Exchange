@@ -1,5 +1,7 @@
 package com.yuldashov.spring.model;
 
+import com.yuldashov.spring.dto.CurrencyResponse;
+
 public class Currency {
     private int id;
     private String fullName;
@@ -8,10 +10,6 @@ public class Currency {
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getFullName() {
@@ -36,5 +34,13 @@ public class Currency {
 
     public void setSign(String sign) {
         this.sign = sign;
+    }
+
+    public CurrencyResponse mapToResponse() {
+        return new CurrencyResponse(this.getId(),
+                this.getFullName(),
+                this.getCode(),
+                this.getSign()
+        );
     }
 }

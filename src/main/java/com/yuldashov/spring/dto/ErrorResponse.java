@@ -1,20 +1,13 @@
 package com.yuldashov.spring.dto;
 
 public class ErrorResponse {
-    private int status;
-    private String error;
-    private String message;
+    private final String error;
+    private final String message;
 
-    public ErrorResponse(int status, String error, String message) {
-        this.status = status;
+    public ErrorResponse(String error, String message) {
         this.error = error;
         this.message = message;
     }
-
-    public int getStatus() {
-        return status;
-    }
-
     public String getError() {
         return error;
     }

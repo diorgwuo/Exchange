@@ -1,10 +1,12 @@
 package com.yuldashov.spring.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -16,7 +18,14 @@ import javax.sql.DataSource;
 @Configuration
 @ComponentScan("com.yuldashov.spring")
 @EnableWebMvc
+@PropertySource("classpath:application.properties")
 public class SpringConfig implements WebMvcConfigurer {
+
+    @Value("${db.url}")
+    private String dbUrl;
+    @Value("${db.driver}")
+    private String dbDriver;
+
 
     private final ApplicationContext applicationContext;
 
@@ -29,8 +38,8 @@ public class SpringConfig implements WebMvcConfigurer {
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
-        dataSource.setDriverClassName("org.sqlite.JDBC");
-        dataSource.setUrl("jdbc:sqlite:/Users/diorgwuo/IdeaProjects/Project 3/project3");
+        dataSource.setDriverClassName(dbDriver);
+        dataSource.setUrl(dbUrl);
         return dataSource;
     }
 

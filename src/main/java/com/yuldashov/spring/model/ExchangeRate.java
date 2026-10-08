@@ -1,5 +1,7 @@
 package com.yuldashov.spring.model;
 
+import com.yuldashov.spring.dto.ExchangeResponse;
+
 import java.math.BigDecimal;
 
 public class ExchangeRate {
@@ -10,10 +12,6 @@ public class ExchangeRate {
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getBaseCurrencyId() {
@@ -38,5 +36,14 @@ public class ExchangeRate {
 
     public void setRate(BigDecimal rate) {
         this.rate = rate;
+    }
+
+    public ExchangeResponse mapToResponse(Currency base, Currency target) {
+        return new ExchangeResponse(
+                this.getId(),
+                base.mapToResponse(),
+                target.mapToResponse(),
+                this.getRate()
+        );
     }
 }
