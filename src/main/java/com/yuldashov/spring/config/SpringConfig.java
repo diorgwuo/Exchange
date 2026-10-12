@@ -21,13 +21,12 @@ import javax.sql.DataSource;
 @PropertySource("classpath:application.properties")
 public class SpringConfig implements WebMvcConfigurer {
 
+    private final ApplicationContext applicationContext;
+
     @Value("${db.url}")
     private String dbUrl;
     @Value("${db.driver}")
     private String dbDriver;
-
-
-    private final ApplicationContext applicationContext;
 
     @Autowired
     public SpringConfig(ApplicationContext applicationContext) {

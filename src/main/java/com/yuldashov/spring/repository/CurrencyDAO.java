@@ -33,7 +33,7 @@ public class CurrencyDAO {
 
         jdbcTemplate.update(con -> {
                     PreparedStatement ps = con.prepareStatement(
-                            "INSERT INTO currencies (FullName,Code,Sign) VALUES (?,?,?)",
+                            "INSERT INTO currencies (fullname,code,sign) VALUES (?,?,?)",
                             Statement.RETURN_GENERATED_KEYS);
                     ps.setString(1, currency.getFullName());
                     ps.setString(2, currency.getCode());

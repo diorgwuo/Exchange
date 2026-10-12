@@ -47,8 +47,7 @@ public class ExchangeController {
 
     @PatchMapping(value = "/exchangeRate/{code}")
     public ExchangeResponse update(@PathVariable("code") String code, @RequestBody ExchangeRateDTO rateDto) {
-        BigDecimal rate = rateDto.rate();
-        return exchangeService.update(code, rate);
+        return exchangeService.update(code, rateDto);
     }
 
     @GetMapping(value = "/exchange")

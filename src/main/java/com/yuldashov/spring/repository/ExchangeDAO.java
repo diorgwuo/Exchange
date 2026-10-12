@@ -39,11 +39,6 @@ public class ExchangeDAO {
         return keyHolder.getKey().intValue();
     }
 
-    public ExchangeRate lastCreate() {
-        return jdbcTemplate.queryForObject("SELECT * FROM exchangeRates ORDER BY id DESC LIMIT 1"
-                , new BeanPropertyRowMapper<>(ExchangeRate.class));
-    }
-
     public List<ExchangeRate> index() {
         return jdbcTemplate.query("SELECT * FROM exchangeRates", new BeanPropertyRowMapper<>(ExchangeRate.class));
     }
