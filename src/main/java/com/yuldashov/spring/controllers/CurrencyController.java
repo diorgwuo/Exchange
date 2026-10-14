@@ -1,13 +1,12 @@
 package com.yuldashov.spring.controllers;
 
-import com.yuldashov.spring.dto.CurrencyRequest;
-import com.yuldashov.spring.dto.CurrencyResponse;
+import com.yuldashov.spring.dto.сurrency.CurrencyRequest;
+import com.yuldashov.spring.dto.сurrency.CurrencyResponse;
 import com.yuldashov.spring.model.Currency;
 import com.yuldashov.spring.service.CurrencyService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.yuldashov.spring.service;
 
-import com.yuldashov.spring.dto.CurrencyRequest;
-import com.yuldashov.spring.dto.CurrencyResponse;
+import com.yuldashov.spring.dto.сurrency.CurrencyRequest;
+import com.yuldashov.spring.dto.сurrency.CurrencyResponse;
 import com.yuldashov.spring.expection.DublicateException;
 import com.yuldashov.spring.expection.NotFoundException;
 import com.yuldashov.spring.model.Currency;

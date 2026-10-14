@@ -1,17 +1,12 @@
 package com.yuldashov.spring.repository;
 
-import com.yuldashov.spring.dto.CurrencyResponse;
-import com.yuldashov.spring.dto.ExchangeResponse;
-import com.yuldashov.spring.expection.NotFoundException;
 import com.yuldashov.spring.model.ExchangeRate;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
-import javax.swing.plaf.PanelUI;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;

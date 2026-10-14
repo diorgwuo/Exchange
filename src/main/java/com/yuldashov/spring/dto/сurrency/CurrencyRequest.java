@@ -1,10 +1,6 @@
-package com.yuldashov.spring.dto;
+package com.yuldashov.spring.dto.сurrency;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 public record CurrencyRequest(
         @NotBlank(message = "Укажите имя")

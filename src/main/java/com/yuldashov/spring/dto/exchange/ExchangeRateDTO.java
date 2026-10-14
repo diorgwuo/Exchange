@@ -1,4 +1,4 @@
-package com.yuldashov.spring.dto;
+package com.yuldashov.spring.dto.exchange;
 
 import jakarta.validation.constraints.NotNull;
 

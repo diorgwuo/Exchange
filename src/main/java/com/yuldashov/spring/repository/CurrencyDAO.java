@@ -42,8 +42,7 @@ public class CurrencyDAO {
     }
 
     public boolean existByCode(String code) {
-        return jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM currencies WHERE code = ?)", Boolean.class, code);
+        return jdbcTemplate.queryForObject("SELECT EXISTS (SELECT 1 FROM currencies WHERE code = ?)", Boolean.class, code);
     }
 
     public Currency getByCode(String code) {
@@ -51,13 +50,13 @@ public class CurrencyDAO {
     }
 
     public Currency getById(int id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE id = ?"
-                , new BeanPropertyRowMapper<>(Currency.class), id);
+        return jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE id = ?",
+                new BeanPropertyRowMapper<>(Currency.class), id);
     }
 
-    public int getCodeById(String сode) {
-        Currency currency = jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE code = ?"
-                , new BeanPropertyRowMapper<>(Currency.class), сode);
+    public int getIdByCode(String сode) {
+        Currency currency = jdbcTemplate.queryForObject("SELECT * FROM currencies WHERE code = ?",
+                new BeanPropertyRowMapper<>(Currency.class), сode);
         return currency.getId();
     }
 }

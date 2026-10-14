@@ -1,6 +1,6 @@
 package com.yuldashov.spring.service;
 
-import com.yuldashov.spring.dto.*;
+import com.yuldashov.spring.dto.exchange.*;
 import com.yuldashov.spring.expection.NotFoundException;
 import com.yuldashov.spring.model.Currency;
 import com.yuldashov.spring.model.ExchangeRate;
@@ -20,27 +20,27 @@ public class ExchangeService {
     private final ExchangeDAO exchangeDAO;
     private final CurrencyDAO currencyDAO;
 
-    public ExchangeResponse create(ExchangeRequest request) {
-        String baseCurrencyCode = request.getBaseCurrencyCode();
-        String targetCurrencyCode = request.getTargetCurrencyCode();
+    public ExchangeRatesResponse create(ExchangeRatesRequest request) {
+        String baseCurrencyCode = request.baseCurrencyCode();
+        String targetCurrencyCode = request.targetCurrencyCode();
         if (currencyDAO.existByCode(baseCurrencyCode)
                 && currencyDAO.existByCode(targetCurrencyCode)) {
             Currency baseCurrency = currencyDAO.getByCode(baseCurrencyCode);
             Currency targetCurrency = currencyDAO.getByCode(targetCurrencyCode);
             int baseCurrencyId = baseCurrency.getId();
             int targetCurrencyId = targetCurrency.getId();
-            int id = exchangeDAO.create(baseCurrencyId, targetCurrencyId, request.getRate());
-            return new ExchangeResponse(id,
+            int id = exchangeDAO.create(baseCurrencyId, targetCurrencyId, request.rate());
+            return new ExchangeRatesResponse(id,
                     baseCurrency.mapToResponse(),
                     targetCurrency.mapToResponse(),
-                    request.getRate()
+                    request.rate()
             );
         } else {
             throw new NotFoundException("Одна (или обе) валюта из валютной пары не существует в БД");
         }
     }
 
-    public List<ExchangeResponse> index() {
+    public List<ExchangeRatesResponse> index() {
         return exchangeDAO.index().stream()
                 .map(rate -> rate.mapToResponse(
                         currencyDAO.getById(rate.getBaseCurrencyId()),
@@ -49,14 +49,14 @@ public class ExchangeService {
                 .collect(Collectors.toList());
     }
 
-    public ExchangeResponse getCoupleCurrency(String code) {
+    public ExchangeRatesResponse getCoupleCurrency(String code) {
         ExchangeData exchangeData = findExchangeData(code);
         ExchangeRate exchange = exchangeData.exchange();
         return exchange.mapToResponse(exchangeData.baseCurrency(), exchangeData.targetCurrency());
     }
 
     @Transactional
-    public ExchangeResponse update(String code, ExchangeRateDTO rateDto) {
+    public ExchangeRatesResponse update(String code, ExchangeRateDTO rateDto) {
         ExchangeData exchangeData = findExchangeData(code);
         BigDecimal rate = rateDto.rate();
         ExchangeRate exchange = exchangeData.exchange();
@@ -65,16 +65,16 @@ public class ExchangeService {
         return exchange.mapToResponse(exchangeData.baseCurrency(), exchangeData.targetCurrency());
     }
 
-    public ExchangeDTOResponse calculateExchange(String baseCode,
-                                                 String targetCode,
-                                                 BigDecimal amount) {
+    public ExchangeResponse calculateExchange(String baseCode,
+                                              String targetCode,
+                                              BigDecimal amount) {
         Currency baseCurrency = currencyDAO.getByCode(baseCode);
         Currency targetCurrency = currencyDAO.getByCode(targetCode);
         int baseId = baseCurrency.getId();
         int targetId = targetCurrency.getId();
         BigDecimal rate = calculateRate(baseId, targetId);
         BigDecimal convertedAmount = amount.multiply(rate);
-        return new ExchangeDTOResponse(baseCurrency, targetCurrency, rate, amount, convertedAmount);
+        return new ExchangeResponse(baseCurrency, targetCurrency, rate, amount, convertedAmount);
     }
 
     BigDecimal calculateRate(int baseId, int targetId) {
@@ -91,7 +91,7 @@ public class ExchangeService {
     }
 
     BigDecimal calculateRateUseUSD(int baseId, int targetId) {
-        int usdId = currencyDAO.getCodeById("USD");
+        int usdId = currencyDAO.getIdByCode("USD");
         if (!exchangeDAO.existCoupleCurrency(usdId, baseId) || !exchangeDAO.existCoupleCurrency(usdId, targetId)) {
             throw new NotFoundException("Обменных курсов для этих валют нет");
         }

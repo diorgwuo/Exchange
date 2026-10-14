@@ -1,4 +1,4 @@
-package com.yuldashov.spring.dto;
+package com.yuldashov.spring.dto.exchange;
 
 import com.yuldashov.spring.model.Currency;
 import com.yuldashov.spring.model.ExchangeRate;
