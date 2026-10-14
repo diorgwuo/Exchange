@@ -44,11 +44,16 @@ public class ExchangeDAO {
     }
 
     public ExchangeRate findCoupleCurrency(int baseCurrencyId, int targetCurrencyId) {
-        return jdbcTemplate.queryForObject("SELECT * FROM exchangeRates WHERE base_currency_id = ? AND target_currency_id = ?"
+        return jdbcTemplate.queryForObject("SELECT * FROM exchange_rates WHERE base_currency_id = ? AND target_currency_id = ?"
                 , new BeanPropertyRowMapper<>(ExchangeRate.class), baseCurrencyId, targetCurrencyId);
     }
 
     public void update(int exchangeId, BigDecimal rate) {
-        jdbcTemplate.update("UPDATE exchangeRates SET rate = ? WHERE id = ?", rate, exchangeId);
+        jdbcTemplate.update("UPDATE exchange_rates SET rate = ? WHERE id = ?", rate, exchangeId);
+    }
+
+    public boolean existCoupleCurrency(int baseCurrencyId, int targetCurrencyId) {
+        return jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM exchange_rates WHERE base_currency_id = ? AND target_currency_id = ?)"
+                ,Boolean.class, baseCurrencyId, targetCurrencyId);
     }
 }

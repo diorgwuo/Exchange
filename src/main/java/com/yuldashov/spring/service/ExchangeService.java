@@ -6,52 +6,38 @@ import com.yuldashov.spring.model.Currency;
 import com.yuldashov.spring.model.ExchangeRate;
 import com.yuldashov.spring.repository.CurrencyDAO;
 import com.yuldashov.spring.repository.ExchangeDAO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ExchangeService {
     private final ExchangeDAO exchangeDAO;
-    private final CurrencyService currencyService;
     private final CurrencyDAO currencyDAO;
-
-    @Autowired
-    public ExchangeService(CurrencyDAO currencyDAO, ExchangeDAO exchangeDAO, CurrencyService currencyService) {
-        this.currencyDAO = currencyDAO;
-        this.exchangeDAO = exchangeDAO;
-        this.currencyService = currencyService;
-    }
-
 
     public ExchangeResponse create(ExchangeRequest request) {
         String baseCurrencyCode = request.getBaseCurrencyCode();
         String targetCurrencyCode = request.getTargetCurrencyCode();
-        Currency baseCurrency = currencyDAO.getByCode(baseCurrencyCode);
-        Currency targetCurrency = currencyDAO.getByCode(targetCurrencyCode);
-
         if (currencyDAO.existByCode(baseCurrencyCode)
                 && currencyDAO.existByCode(targetCurrencyCode)) {
-
+            Currency baseCurrency = currencyDAO.getByCode(baseCurrencyCode);
+            Currency targetCurrency = currencyDAO.getByCode(targetCurrencyCode);
             int baseCurrencyId = baseCurrency.getId();
             int targetCurrencyId = targetCurrency.getId();
             int id = exchangeDAO.create(baseCurrencyId, targetCurrencyId, request.getRate());
-
             return new ExchangeResponse(id,
-                    toCurrencyResponse(baseCurrency),
-                    toCurrencyResponse(targetCurrency),
+                    baseCurrency.mapToResponse(),
+                    targetCurrency.mapToResponse(),
                     request.getRate()
             );
         } else {
             throw new NotFoundException("Одна (или обе) валюта из валютной пары не существует в БД");
         }
-    }
-
-    private CurrencyResponse toCurrencyResponse(Currency currency) {
-        return currency.mapToResponse();
     }
 
     public List<ExchangeResponse> index() {
@@ -64,88 +50,75 @@ public class ExchangeService {
     }
 
     public ExchangeResponse getCoupleCurrency(String code) {
-        String baseCode = code.substring(0, 3);
-        String targetCode = code.substring(3, 6);
-        Currency baseCurrency = currencyDAO.getByCode(baseCode);
-        Currency targetCurrency = currencyDAO.getByCode(targetCode);
-        int baseCurrencyId = baseCurrency.getId();
-        int targetCurrencyId = targetCurrency.getId();
-        if (baseCurrencyId > 0 && targetCurrencyId > 0) {
-            ExchangeRate exchange = exchangeDAO.findCoupleCurrency(baseCurrencyId, targetCurrencyId);
-
-            if (exchange != null) {
-                return exchange.mapToResponse(baseCurrency, targetCurrency);
-            } else {
-                throw new NotFoundException("Обменный курс для пары не найден");
-            }
-        }
-        throw new NotFoundException("Не найдены такие валюты");
+        ExchangeData exchangeData = findExchangeData(code);
+        ExchangeRate exchange = exchangeData.exchange();
+        return exchange.mapToResponse(exchangeData.baseCurrency(), exchangeData.targetCurrency());
     }
 
+    @Transactional
     public ExchangeResponse update(String code, ExchangeRateDTO rateDto) {
-        String baseCode = code.substring(0, 3);
-        String targetCode = code.substring(3, 6);
+        ExchangeData exchangeData = findExchangeData(code);
         BigDecimal rate = rateDto.rate();
-        if (rate == null) {
-            throw new NotFoundException("Поле в форме не заполнено");
-        }
-        Currency baseCurrency = currencyDAO.getByCode(baseCode);
-        Currency targetCurrency = currencyDAO.getByCode(targetCode);
-        int baseCurrencyId = baseCurrency.getId();
-        int targetCurrencyId = targetCurrency.getId();
-        if (baseCurrencyId > 0 && targetCurrencyId > 0) {
-            ExchangeRate exchange = exchangeDAO.findCoupleCurrency(baseCurrencyId, targetCurrencyId);
-            if (exchange != null) {
-                exchangeDAO.update(exchange.getId(), rate);
-                ExchangeRate exchangeNew = exchangeDAO.findCoupleCurrency(baseCurrencyId, targetCurrencyId);
-                return exchangeNew.mapToResponse(baseCurrency, targetCurrency);
-            } else {
-                throw new NotFoundException("Обменный курс для пары не найден");
-            }
-        }
-        throw new NotFoundException("Не найдены такие валюты");
+        ExchangeRate exchange = exchangeData.exchange();
+        exchangeDAO.update(exchange.getId(), rate);
+        exchange.setRate(rate);
+        return exchange.mapToResponse(exchangeData.baseCurrency(), exchangeData.targetCurrency());
     }
 
     public ExchangeDTOResponse calculateExchange(String baseCode,
                                                  String targetCode,
                                                  BigDecimal amount) {
-        CurrencyResponse baseCurrency = currencyService.getByCode(baseCode);
-        CurrencyResponse targetCurrency = currencyService.getByCode(targetCode);
-        int baseId = baseCurrency.id();
-        int targetId = targetCurrency.id();
-
-        BigDecimal rate = calculatorRate(baseId, targetId);
+        Currency baseCurrency = currencyDAO.getByCode(baseCode);
+        Currency targetCurrency = currencyDAO.getByCode(targetCode);
+        int baseId = baseCurrency.getId();
+        int targetId = targetCurrency.getId();
+        BigDecimal rate = calculateRate(baseId, targetId);
         BigDecimal convertedAmount = amount.multiply(rate);
-
         return new ExchangeDTOResponse(baseCurrency, targetCurrency, rate, amount, convertedAmount);
     }
 
-    BigDecimal calculatorRate(int baseId, int targetId) {
-
-        ExchangeRate exchangeCouple = exchangeDAO.findCoupleCurrency(baseId, targetId);
-
-        if (exchangeCouple != null) {
+    BigDecimal calculateRate(int baseId, int targetId) {
+        if (exchangeDAO.existCoupleCurrency(baseId, targetId)) {
+            ExchangeRate exchangeCouple = exchangeDAO.findCoupleCurrency(baseId, targetId);
             return exchangeCouple.getRate();
         }
-
-        ExchangeRate reverseExchange = exchangeDAO.findCoupleCurrency(targetId, baseId);
-
-        if (reverseExchange != null) {
+        if (exchangeDAO.existCoupleCurrency(targetId, baseId)) {
+            ExchangeRate reverseExchange = exchangeDAO.findCoupleCurrency(targetId, baseId);
             BigDecimal reverseRate = reverseExchange.getRate();
             return BigDecimal.ONE.divide(reverseRate, 4);
         }
-
-        return calculatorRateUseUSD(baseId, targetId);
+        return calculateRateUseUSD(baseId, targetId);
     }
 
-    BigDecimal calculatorRateUseUSD(int baseId, int targetId) {
+    BigDecimal calculateRateUseUSD(int baseId, int targetId) {
         int usdId = currencyDAO.getCodeById("USD");
+        if (!exchangeDAO.existCoupleCurrency(usdId, baseId) || !exchangeDAO.existCoupleCurrency(usdId, targetId)) {
+            throw new NotFoundException("Обменных курсов для этих валют нет");
+        }
         ExchangeRate firstExchange = exchangeDAO.findCoupleCurrency(usdId, baseId);
         ExchangeRate secondExchange = exchangeDAO.findCoupleCurrency(usdId, targetId);
-
         BigDecimal firstRate = firstExchange.getRate();
         BigDecimal secondRate = secondExchange.getRate();
-
         return secondRate.divide(firstRate, 4);
+    }
+
+    ExchangeData findExchangeData(String code) {
+        String baseCode = code.substring(0, 3);
+        String targetCode = code.substring(3, 6);
+        if (!currencyDAO.existByCode(baseCode)) {
+            throw new NotFoundException("Не найдена такая валюта:" + baseCode);
+        }
+        if (!currencyDAO.existByCode(targetCode)) {
+            throw new NotFoundException("Не найдена такая валюта:" + targetCode);
+        }
+        Currency baseCurrency = currencyDAO.getByCode(baseCode);
+        Currency targetCurrency = currencyDAO.getByCode(targetCode);
+        int baseCurrencyId = baseCurrency.getId();
+        int targetCurrencyId = targetCurrency.getId();
+        if (!exchangeDAO.existCoupleCurrency(baseCurrencyId, targetCurrencyId)) {
+            throw new NotFoundException("Обменный курс для пары не найден");
+        }
+        ExchangeRate exchange = exchangeDAO.findCoupleCurrency(baseCurrencyId, targetCurrencyId);
+        return new ExchangeData(baseCurrency, targetCurrency, exchange);
     }
 }

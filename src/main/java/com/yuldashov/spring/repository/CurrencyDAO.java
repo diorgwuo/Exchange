@@ -1,14 +1,11 @@
 package com.yuldashov.spring.repository;
 
-import com.yuldashov.spring.dto.CurrencyRequest;
-import com.yuldashov.spring.dto.CurrencyResponse;
 import com.yuldashov.spring.model.Currency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;

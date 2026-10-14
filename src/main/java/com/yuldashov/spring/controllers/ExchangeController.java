@@ -4,11 +4,13 @@ import com.yuldashov.spring.dto.*;
 import com.yuldashov.spring.expection.NotFoundException;
 import com.yuldashov.spring.service.ExchangeService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.service.annotation.GetExchange;
 
@@ -20,6 +22,7 @@ import java.util.SimpleTimeZone;
 import java.util.stream.Collectors;
 
 @RestController
+@Validated
 public class ExchangeController {
     private final ExchangeService exchangeService;
 
@@ -46,7 +49,7 @@ public class ExchangeController {
     }
 
     @PatchMapping(value = "/exchangeRate/{code}")
-    public ExchangeResponse update(@PathVariable("code") String code, @RequestBody ExchangeRateDTO rateDto) {
+    public ExchangeResponse update(@PathVariable("code") String code, @RequestBody @Valid ExchangeRateDTO rateDto) {
         return exchangeService.update(code, rateDto);
     }
 

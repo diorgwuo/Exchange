@@ -23,14 +23,14 @@ public class CurrencyService {
 
     @Transactional
     public CurrencyResponse create(CurrencyRequest request) {
-        if (currencyDAO.existByCode(request.getCode())) {
-            throw new DublicateException("Валюта с кодом " + request.getCode() + " уже существует");
+        if (currencyDAO.existByCode(request.code())) {
+            throw new DublicateException("Валюта с кодом " + request.code() + " уже существует");
         }
 
         Currency currency = new Currency();
-        currency.setFullName(request.getFullName());
-        currency.setCode(request.getCode());
-        currency.setSign(request.getSign());
+        currency.setFullName(request.fullName());
+        currency.setCode(request.code());
+        currency.setSign(request.sign());
 
         int id = currencyDAO.create(currency);
 

@@ -85,8 +85,25 @@
           <version>9.1.0.Final</version>
           <scope>compile</scope>
       </dependency>
+
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.18.46</version>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
   <build>
     <finalName>Project3</finalName>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                  <source>25</source>
+                  <target>25</target>
+              </configuration>
+          </plugin>
+      </plugins>
   </build>
 </project>
